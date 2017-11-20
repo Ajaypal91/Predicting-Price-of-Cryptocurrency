@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import sklearn.decomposition as model
 from sklearn import svm
-from sklearn.metrics import accuracy_score, roc_curve, auc
+from sklearn.metrics import accuracy_score, roc_curve, roc_auc_score
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -92,24 +92,11 @@ def plot_accuracy_plot(title, X):
     ax.legend((rects1[0], rects2[0], rects3[0]), ('poly', 'rbf', 'sigmoid'))
     plt.show()
 
-def plot_roc_curves(false_positive_rate, true_positive_rate, title, roc_auc):
-    plt.title(title)
-    plt.plot(false_positive_rate, true_positive_rate, 'b', label='AUC = %0.2f' % roc_auc)
-    plt.legend(loc='lower right')
-    plt.plot([0, 1], [0, 1], 'r--')
-    plt.xlim([-0.1, 1.2])
-    plt.ylim([-0.1, 1.2])
-    plt.ylabel('True Positive Rate')
-    plt.xlabel('False Positive Rate')
-    plt.show()
-
 #get accuracy plot based on #components, #kernels used and different high values
 def get_accuracy_plot(fdf):
     accuracy = []
-    aucs = []
     for kern in kernel:
         temp = []
-        temp2 = []
         for x in range(len(my_high_val)):
             my_high = my_high_val[x]
 
@@ -132,28 +119,16 @@ def get_accuracy_plot(fdf):
             split_per = len(Y) * split_ratio
             training, test = new_features[:split_per, :], new_features[split_per:, :]
             Y_train, Y_test = Y[:split_per], Y[split_per:]
-
+            msk = Y_train == 1
+            # print len(Y)
+            # print len(Y_test)
+            # print len(Y_train)
+            # print Y_train[msk]
             clf = train_SVM(training, Y_train, kern, degree)
             Y_exp = clf.predict(test)
-            Y_score = clf.decision_function(test)
-            # print Y_score
             # print Y_exp
             # print Y_test
             temp.append(accuracy_score(Y_exp, Y_test))
-
-            # #calculate roc curve
-            false_positive_rate, true_positive_rate, thresholds = roc_curve(Y_test, Y_score)
-            roc_auc = auc(false_positive_rate, true_positive_rate)
-            temp2.append(roc_auc)
-
-            #comment out below code to plot roc curves
-            # print roc_auc
-            # title='Receiver Operating Characteristic for ' + Y_label + ' values using ' + kern + ' kernel'
-            # plot_roc_curves(false_positive_rate,true_positive_rate,title,roc_auc)
-
-
-        print "\n"
-        aucs.append(temp2)
         accuracy.append(temp)
 
     print accuracy
