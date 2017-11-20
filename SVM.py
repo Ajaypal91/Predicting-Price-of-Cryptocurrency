@@ -19,10 +19,10 @@ bar_width = 0.2
 #number of componends for PCA
 number_of_components = 3
 #SVM parameters
-kernel = 'poly','rbf','sigmoid'
-degree = 2
+kernel = ['poly','rbf','sigmoid']
+degree = 3
 #user input value
-my_high_val = [2000,3000,4000,5000,6000,7000]
+my_high_val = [1000,2000,3000,4000,5000,6000]
 
 colors = sns.color_palette()
 
@@ -36,7 +36,7 @@ def read_file(columns_to_read):
 def get_transformed_features(df,number_of_components):
     PCA = model.PCA(n_components=number_of_components)
     PCA.fit(df)
-    new_features = PCA.fit_transform(df)
+    new_features = PCA.transform(df)
     assert new_features.shape[0] == len(df)
     return (PCA,new_features)
 
@@ -66,7 +66,7 @@ def get_final_dataframe():
     # print fdf.head()
     return fdf
 
-def plot_accuracy_plot(title, X):
+def plot_accuracy_plot(title, X, ylabel):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     width = 0.2
@@ -79,7 +79,7 @@ def plot_accuracy_plot(title, X):
     rects2 = ax.bar(ind + width, X[1], width, color='red')
     rects3 = ax.bar(ind + 2*width, X[2], width, color='blue')
 
-    ax.set_ylabel("Accuracy")
+    ax.set_ylabel(ylabel)
     ax.set_title(title)
     # ax.set_autoscalex_on(my_high_val)
     ax.set_xlim(-width, len(ind) + width)
@@ -136,9 +136,9 @@ def get_accuracy_plot(fdf):
             clf = train_SVM(training, Y_train, kern, degree)
             Y_exp = clf.predict(test)
             Y_score = clf.decision_function(test)
-            # print Y_score
-            # print Y_exp
-            # print Y_test
+            print my_high, kern
+            print Y_exp
+            print Y_test
             temp.append(accuracy_score(Y_exp, Y_test))
 
             # #calculate roc curve
@@ -147,18 +147,20 @@ def get_accuracy_plot(fdf):
             temp2.append(roc_auc)
 
             #comment out below code to plot roc curves
-            # print roc_auc
+            ## print roc_auc
             # title='Receiver Operating Characteristic for ' + Y_label + ' values using ' + kern + ' kernel'
             # plot_roc_curves(false_positive_rate,true_positive_rate,title,roc_auc)
 
 
-        print "\n"
         aucs.append(temp2)
         accuracy.append(temp)
 
-    print accuracy
-    title = "Plot for different " + Y_label+ " values and Number of Principle components = " + str(number_of_components)
-    plot_accuracy_plot(title,accuracy)
+    print "Accuracy = " + str(accuracy)
+    print "Area under curve values = " + str(aucs)
+    title = "Accuracy plot for different " + Y_label+ " values and Number of Principle components = " + str(number_of_components)
+    plot_accuracy_plot(title,accuracy,"Accuracy")
+    title = "AUC plot for different " + Y_label + " values and Number of Principle components = " + str(number_of_components)
+    plot_accuracy_plot(title,aucs,"AUC")
 
 
 fdf = get_final_dataframe()

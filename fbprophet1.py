@@ -43,7 +43,7 @@ def predict_and_plot_closing_price():
     print df.head()
 
     m = Prophet()
-    m.fit(df);
+    m.fit(df)
     future = m.make_future_dataframe(periods=0)
     forecast = m.predict(future)
     # forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']] = np.e(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']])
@@ -67,7 +67,7 @@ def predict_and_plot_opening_price():
     print df.head()
 
     m = Prophet()
-    m.fit(df);
+    m.fit(df)
     future = m.make_future_dataframe(periods=0)
     forecast = m.predict(future)
     # forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']] = np.e(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']])
@@ -91,7 +91,7 @@ def predict_and_plot_high_price():
     print df.head()
 
     m = Prophet()
-    m.fit(df);
+    m.fit(df)
     future = m.make_future_dataframe(periods=0)
     forecast = m.predict(future)
     # forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']] = np.e(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']])
@@ -116,7 +116,7 @@ def predict_and_plot_Low_price():
     print df.head()
 
     m = Prophet()
-    m.fit(df);
+    m.fit(df)
     future = m.make_future_dataframe(periods=0)
     forecast = m.predict(future)
     # forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']] = np.e(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']])
