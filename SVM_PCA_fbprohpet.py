@@ -30,6 +30,7 @@ periods = 10
 
 #number of future vals added to dataset to overcome bias
 no_future_vals = 200
+number_of_real_data_points = 10
 
 colors = sns.color_palette()
 
@@ -95,7 +96,7 @@ split_per = len(df1) * split_ratio
 training, test = new_features[:split_per, :], new_features[split_per:, :]
 # print training.shape
 
-predicted_vals = prophet.predict_next_val(no_future_vals+10)[0]
+predicted_vals = prophet.predict_next_val(no_future_vals+number_of_real_data_points)[0]
 #smoothen the new values received from fbprophet
 smoothed_new_predicted_vals = np.log(predicted_vals)
 # transform the new values using the trained PCA

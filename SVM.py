@@ -5,6 +5,9 @@ from sklearn import svm
 from sklearn.metrics import accuracy_score, roc_curve, auc
 import matplotlib.pyplot as plt
 import seaborn as sns
+import fbprophet2 as prophet
+reload(prophet)
+
 
 INPUT_FILE1 = "bitcoin_dataset.csv"
 INPUT_FILE2 = "bitcoin_price.csv"
@@ -26,6 +29,12 @@ my_high_val = [1000,2000,3000,4000,5000,6000]
 
 colors = sns.color_palette()
 
+#number of future vals added to dataset to overcome bias
+no_future_vals = 300
+number_of_real_data_points = 10
+
+#flag to trigger import of data from fbProphet to overcome class skewness
+use_fbProphet = False
 
 #read csv file
 def read_file(columns_to_read):
@@ -104,7 +113,7 @@ def plot_roc_curves(false_positive_rate, true_positive_rate, title, roc_auc):
     plt.show()
 
 #get accuracy plot based on #components, #kernels used and different high values
-def get_accuracy_plot(fdf):
+def get_accuracy_plot(training,test,future_vals):
     accuracy = []
     aucs = []
     for kern in kernel:
@@ -115,30 +124,25 @@ def get_accuracy_plot(fdf):
 
             # only Y labels column dataframe
             Y = fdf[[Y_label]]
-            # feature columns dataframe
-            df = fdf[cols2]
 
             # create labels
             Y = np.array(Y[Y_label].apply(lambda x: 0 if x < my_high else 1))
 
-            # transform the data. Apply log to smoothen the data
-            df1 = df[cols2].applymap(np.log)
-
-            # get PCA classifier new tranformed features fromd PCA
-            PCA_clf, new_features = get_transformed_features(df1, number_of_components)
-            # print new_features[:3]
-
-            # train SVM and test it
-            split_per = len(Y) * split_ratio
-            training, test = new_features[:split_per, :], new_features[split_per:, :]
             Y_train, Y_test = Y[:split_per], Y[split_per:]
+            if use_fbProphet:
+                # concatenate number of future values
+                Y_train = np.concatenate((Y_train, np.ones(no_future_vals)))
 
             clf = train_SVM(training, Y_train, kern, degree)
             Y_exp = clf.predict(test)
             Y_score = clf.decision_function(test)
             print my_high, kern
+            print "Expected test output"
             print Y_exp
+            print "Actual test output"
             print Y_test
+            acc = accuracy_score(Y_exp, Y_test)
+            print "Test Accuracy = " + str(acc)
             temp.append(accuracy_score(Y_exp, Y_test))
 
             # #calculate roc curve
@@ -146,8 +150,14 @@ def get_accuracy_plot(fdf):
             roc_auc = auc(false_positive_rate, true_positive_rate)
             temp2.append(roc_auc)
 
+            if use_fbProphet:
+                #predicting new real time data
+                Y_real = clf.predict(future_vals)
+                print "Real time Prediction = " + str(Y_real)
+                print "Real time Accuracy = " + str(accuracy_score(np.ones(number_of_real_data_points), Y_real))
+
             #comment out below code to plot roc curves
-            ## print roc_auc
+            # # print roc_auc
             # title='Receiver Operating Characteristic for ' + Y_label + ' values using ' + kern + ' kernel'
             # plot_roc_curves(false_positive_rate,true_positive_rate,title,roc_auc)
 
@@ -164,13 +174,28 @@ def get_accuracy_plot(fdf):
 
 
 fdf = get_final_dataframe()
-get_accuracy_plot(fdf)
+# feature columns dataframe
+df = fdf[cols2]
+# transform the data. Apply log to smoothen the data
+df1 = df[cols2].applymap(np.log)
+# get PCA classifier new tranformed features fromd PCA
+PCA_clf, new_features = get_transformed_features(df1, number_of_components)
+# print new_features[:3]
+split_per = len(df1) * split_ratio
+training, test = new_features[:split_per, :], new_features[split_per:, :]
+# print training.shape
+
+future_new_features = None
+if use_fbProphet:
+    predicted_vals = prophet.predict_next_val(no_future_vals+number_of_real_data_points)[0]
+    #smoothen the new values received from fbprophet
+    smoothed_new_predicted_vals = np.log(predicted_vals)
+    # transform the new values using the trained PCA
+    tranformed_new_data = PCA_clf.transform(smoothed_new_predicted_vals)
+    #use 10 samples for real time prediction
+    future_new_features = tranformed_new_data[no_future_vals:,:]
+    # print tranformed_new_data.shape
+    training = np.concatenate((training,tranformed_new_data[:no_future_vals,:]))
 
 
-
-
-
-
-
-
-
+get_accuracy_plot(training,test, future_new_features)
