@@ -10,8 +10,8 @@ import fbprophet2 as prophet
 reload(prophet)
 
 
-INPUT_FILE1 = "bitcoin_dataset.csv"
-INPUT_FILE2 = "bitcoin_price.csv"
+INPUT_FILE1 = "ethereum_dataset.csv"
+INPUT_FILE2 = "ethereum_price.csv"
 columns_to_read = ["Date","btc_avg_block_size", "btc_n_transactions","btc_n_transactions_total","btc_n_transactions_excluding_popular","btc_n_transactions_excluding_chains_longer_than_100","btc_output_volume"]
 cols2 = ["btc_avg_block_size", "btc_n_transactions","btc_n_transactions_total","btc_n_transactions_excluding_popular","btc_n_transactions_excluding_chains_longer_than_100","btc_output_volume"]
 Y_label = "Open"
@@ -26,7 +26,7 @@ number_of_components = 4
 kernel = ['poly','rbf','sigmoid']
 degree = 3
 #user input value
-my_high_val = [1000,2000,3000,4000]
+my_high_val = [1000,2000,3000,4000,5000,6000]
 
 colors = sns.color_palette()
 
@@ -35,7 +35,7 @@ no_future_vals = 300
 number_of_real_data_points = 10
 
 #flag to trigger import of data from fbProphet to overcome class skewness
-use_fbProphet = False
+use_fbProphet = True
 
 #read csv file
 def read_file(columns_to_read):

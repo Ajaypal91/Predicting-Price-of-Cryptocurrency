@@ -1,5 +1,4 @@
-# INPUT_FILE = "bitcoin_price.csv"
-INPUT_FILE = "ethereum_price.csv"
+INPUT_FILE = "bitcoin_price.csv"
 
 from fbprophet import Prophet
 import numpy as np
@@ -7,9 +6,11 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+from statsmodels.tsa.arima_model import ARIMA
 
 color = sns.color_palette()
-
+p,d,q = 5,2,1
+split_ratio = 0.7
 
 def plot_data(df,X,future,columns,title):
     future = future['ds'].apply(lambda x: mdates.date2num(x))
@@ -38,41 +39,41 @@ def plot_data(df,X,future,columns,title):
 
 def predict_and_plot_closing_price():
     df = pd.read_csv(INPUT_FILE, parse_dates=['Date'], usecols=["Date", "Close"])
+    df = df[::-1]
     df.columns = ["ds", "y"]
-    df["y"] = np.log(df["y"])
+    # df["y"] = np.log(df["y"])
 
-    # print df.head()
+    print df.head()
+    data = np.array(df["y"])
+    split_per = split_ratio*len(df)
+    training, test = data[:split_per], data[split_per:]
 
-    m = Prophet()
-    m.fit(df)
-    future = m.make_future_dataframe(periods=0)
-    forecast = m.predict(future)
-    # forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']] = np.e(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']])
+    predictions = []
+    for t in range(len(test)):
+        model = ARIMA(training, order=(p, d, q))
+        model_fit = model.fit(disp=0)
+        output = model_fit.forecast()
+        yhat = output[0]
+        predictions.append(yhat)
+        obs = test[t]
+        print('predicted=%f, expected=%f' % (yhat,obs))
+
+    # m = Prophet()
+    # m.fit(df)
+    # future = m.make_future_dataframe(periods=0)
+    # forecast = m.predict(future)
+    # # forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']] = np.e(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']])
     # print forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail(40)
-    # m.plot(forecast).show()
-
-    predicted = forecast[['yhat', 'yhat_lower', 'yhat_upper']].applymap(np.exp)
-    cols = ["Mean", "Lower_closing", "Upper_closing"]
-    predicted.columns = cols
-    actual = np.exp(df["y"])
-    actual = actual[::-1]
-    actual.name = "Actual"
-    title = "Closing price distribution of bitcoin"
-    plot_data(predicted, actual, future, cols,title)
-
-    #calculate the accuracy of predictions, how many data values lie between the predicted range
-    predicted = forecast[['yhat_lower', 'yhat_upper']].applymap(np.exp)[::-1]
-    acc = 1
-    err = 1
-    for x, y in zip(predicted[['yhat_lower', 'yhat_upper']].values,actual):
-        if x[0] <= y and  y <= x[1]:
-            acc+=1
-        else :
-            err+=1
-    print acc/len(actual)
-    print err/len(actual)
-
-    return m
+    # # m.plot(forecast).show()
+    #
+    # predicted = forecast[['yhat', 'yhat_lower', 'yhat_upper']].applymap(np.exp)
+    # cols = ["Mean", "Lower_closing", "Upper_closing"]
+    # predicted.columns = cols
+    # actual = np.exp(df["y"])
+    # actual = actual[::-1]
+    # actual.name = "Actual"
+    # title = "Closing price distribution of bitcoin"
+    # plot_data(predicted, actual, future, cols,title)
 
 def predict_and_plot_opening_price():
     df = pd.read_csv(INPUT_FILE, parse_dates=['Date'], usecols=["Date", "Open"])
@@ -98,20 +99,6 @@ def predict_and_plot_opening_price():
     title = "Opening price distribution of bitcoin"
     plot_data(predicted, actual, future, cols, title)
 
-    # calculate the accuracy of predictions, how many data values lie between the predicted range
-    # predicted = forecast[['yhat_lower', 'yhat_upper']].applymap(np.exp)[::-1]
-    # acc = 1.0
-    # err = 1.0
-    # for x, y in zip(predicted[['yhat_lower', 'yhat_upper']].values, actual):
-    #     if x[0] <= y and y <= x[1]:
-    #         acc += 1
-    #     else:
-    #         err += 1
-    # print float(acc/len(actual))
-    # print err/len(actual)
-
-    return m
-
 def predict_and_plot_high_price():
     df = pd.read_csv(INPUT_FILE, parse_dates=['Date'], usecols=["Date", "High"])
     df.columns = ["ds", "y"]
@@ -135,8 +122,6 @@ def predict_and_plot_high_price():
     actual.name = "Actual"
     title = "High price distribution of bitcoin"
     plot_data(predicted, actual, future, cols, title)
-
-    return m
 
 
 def predict_and_plot_Low_price():
@@ -163,10 +148,8 @@ def predict_and_plot_Low_price():
     title = "Low price distribution of bitcoin"
     plot_data(predicted, actual, future, cols, title)
 
-    return m
-
 
 # predict_and_plot_Low_price()
-# predict_and_plot_closing_price()
+predict_and_plot_closing_price()
 # predict_and_plot_high_price()
-predict_and_plot_opening_price()
+# predict_and_plot_opening_price()
