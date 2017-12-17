@@ -10,21 +10,21 @@ We used bitcoin and ethereum price data from kaggle. The data includes daily ope
 <h2>Bitcoin Dataset</h2>
 1) Closing price variation:
 
-![alt text](Data_Analysis/architecture.PNG)
+![alt text](Data_Analysis/1.PNG)
 
 
 2) Opening price variation:
 
-![alt text](Data_Analysis/architecture.PNG)
+![alt text](Data_Analysis/2.PNG)
 
 <h2>Ethereum Dataset</h2>
 1) Closing Price Variation:
 
-![alt text](Data_Analysis/architecture.PNG)
+![alt text](Data_Analysis/3.PNG)
 
 2) Opening Price Variation:
 
-![alt text](Data_Analysis/architecture.PNG)
+![alt text](Data_Analysis/4.PNG)
 
 
 Data representation of High, Low features also looked similar to Open and Close values for that cryptocurrency as shown above.
@@ -44,15 +44,15 @@ The red line in the graph represents the mean predicted values bounded by the lo
 
 <h3>1) BITCOIN</h3>
 
-![alt text](Data_Analysis/architecture.PNG)
+![alt text](Data_Analysis/5.PNG)
 
-![alt text](Data_Analysis/architecture.PNG)
+![alt text](Data_Analysis/6.PNG)
 
 <h3>1) ETHEREUM</h3>
 
-![alt text](Data_Analysis/architecture.PNG)
+![alt text](Data_Analysis/7.PNG)
 
-![alt text](Data_Analysis/architecture.PNG)
+![alt text](Data_Analysis/8.PNG)
 
 <h2>2) HMM</h2>
 
@@ -67,15 +67,14 @@ For prediction, we created list of possible predictions using all the label crea
 
 We used solution to classic HMM problem that given a model and observation sequence, score the sequence in terms of likelihood. Hence, the problem becomes given HMM model and bitcoin values for d days along with open value for d+1st day, we need to compute close value for d+1st day.</br>
 The predicted value Od+1 is iterated over all possible values and most likely prediction is selected as 
-\begin{equation}
-O_d+1=argmax_Od+1 P(O1, O2, …,Od,Od+1|λ)
-\end{equation}
+
+![alt text](Data_Analysis/9.PNG)
 
 <h3>RESULTS</h3>
 
-![alt text](Data_Analysis/architecture.PNG)
+![alt text](Data_Analysis/10.PNG)
 
-![alt text](Data_Analysis/architecture.PNG)
+![alt text](Data_Analysis/11.PNG)
 
 <b>TRYING TO MAKE SENSE OUT OF HMM:</b>
 We can see even though, these models converge pretty good and we can take inferences from the transition matrix and observation matrix, the prediction part is not working well. Every observation gets the score very close to 1, so it does not help us predict correctly. The variance is so minute that while printing every score is printed as 1, but as we can see in last result (N=6), some scores are better than others by a very tiny margin.</br>
@@ -95,7 +94,61 @@ Hence Ot= (fractional-Close, fractional-High, fractional-Low)
 We used Maximum a Posteriori algorithm to train the model. We used different number of states and different number of mixtures to train the models.
 For prediction, we used following point as possible observations.
 
+![alt text](Data_Analysis/12.PNG)
 
-![alt text](Data_Analysis/architecture.PNG)
+We used the function Od+1=argmaxOd+1 P(O1, O2, …,Od,Od+1|λ)  to compute most likely prediction. In this case also, we got equal scores for each of the observations. Sample result is as follows:
 
+![alt text](Data_Analysis/13.PNG)
+
+The values between the brackets [] are the observation being scored (fractional-Close, fractional-High, fractional-Low) and the next value is the predicted score for that observation 
+
+<h2>4) SVM-PCA</h2>
+In this technique, we tried to apply ML to answer specific business query i.e. will I earn profit selling the bitcoin tomorrow. In this question, a user has to specify the price at which the user wants to sell the bitcoin.</br>
+
+To train the model, we used different features than earlier models.</br>
+For bitcoin:</br>
+btc_avg_block_size, btc_n_transactions, btc_n_transactions_total, btc_n_transactions_excluding_popular, btc_n_transactions_excluding_chains_longer_than_100, btc_output_volume</br>
+For Ethereum:</br>
+eth_supply, eth_hashrate, eth_difficulty, eth_blocks, eth_blocksize, eth_blocktime, eth_ethersupply</br>
+Since we did not know the significance of each feature, we used PCA to narrow the dimensionality of the data. We found that, there are 3 most prominent eigen values. So, our experiments were focused on 3 and 2 most prominent bases.</br>
+
+Then we label this data using known close and open price if more than user give price as +1 or -1. The next step was to train SVM based on this labeled data. After training the model on given historical data, we predicted the if the price would be higher than user specified one. The result was obtained as follows:</br>
+
+<b>Bitcoin results:</b>
+
+![alt text](Data_Analysis/14.PNG)
+
+Here AUC represents the total area under ROC curve.
+
+![alt text](Data_Analysis/15.PNG)
+
+Looking at these values, which look pretty good, we had a closer look at the results. We found that the data is very skewed. Most of the data had the price range below the user specified price. In recent months only, the price of the bitcoin is booming. So, we used F1 score as it can better represent the accuracy of the model when data is skewed.<br>
+
+![alt text](Data_Analysis/16.PNG)
+
+We were not surprised by looking this bar chart. Sigmoid kernel gave the worst results, however polynomial and RBF kernel looked promising. 
+fbProphet to the rescue:</br>
+So, in order to solve the problem of data skewness, we randomly generated data using the predictions made by fbProphet for next 200 days and added this data to original pool before train the SVM.
+Below are the results:</br>
+
+![alt text](Data_Analysis/17.PNG)
+
+![alt text](Data_Analysis/18.PNG)
+
+![alt text](Data_Analysis/19.PNG)
+
+We can clearly see that the result is improved when we tried to reduce the skewness of the data. </br>
+We also plotted PR curves. Some sample representatives are as follows:</br>
+
+![alt text](Data_Analysis/20.PNG)
+
+![alt text](Data_Analysis/21.PNG)
+
+![alt text](Data_Analysis/22.PNG)
+
+<b>Note:</b> 
+All the above graphs are for 3 PCA components and trained on bitcoin dataset. We have also done same experiments in different number PCA components and Ethereum dataset. Since, the results are similar to above once and to keep the report concise, we only presented subset of all experimental results.
+
+<h1>Conclusion</h1>
+To predict the future price of cryptocurrencies is tougher than it looks. We tried Facebook Prophet, HMM, GMM-HMM, PCA-SVM, and PCA-SVM-FBProphet. In some cases, the results look promising. But, there are a lot we can improve.
 
