@@ -77,7 +77,7 @@ O_d+1=argmax_Od+1 P(O1, O2, …,Od,Od+1|λ)
 
 ![alt text](Data_Analysis/architecture.PNG)
 
-<b>TRYING TO MAKE SENSE OUT OF HMM:<b>
+<b>TRYING TO MAKE SENSE OUT OF HMM:</b>
 We can see even though, these models converge pretty good and we can take inferences from the transition matrix and observation matrix, the prediction part is not working well. Every observation gets the score very close to 1, so it does not help us predict correctly. The variance is so minute that while printing every score is printed as 1, but as we can see in last result (N=6), some scores are better than others by a very tiny margin.</br>
 
 Another way of predicting values for (d+1)st day, would have been by looking at the B matrix and trying to predict the next best value. Such an approach would be like flipping a coin or randomly selecting a state for dth day. Based on the selected state we can look at the transition matrix to find the most probable state for (d+1)st day. On finding the most probable state for the (d+1)st day we can look at the B matrix and find the most probable observation range. Based on this range we can calculate closing value, when given opening value for (d+1)st day. 
